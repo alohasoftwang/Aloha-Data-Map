@@ -1,0 +1,9 @@
+/* Oswald Bold 700 — Google Fonts, SIL OFL 1.1 */
+@import '@fontsource/oswald/700.css';
+
+.oswald-chart {
+  font-family: 'Oswald', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+}
