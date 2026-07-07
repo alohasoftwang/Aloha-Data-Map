@@ -1,0 +1,2 @@
+-- 已合并至 init_mysql.sql
+-- 请使用：data/schema/init_mysql.sql
