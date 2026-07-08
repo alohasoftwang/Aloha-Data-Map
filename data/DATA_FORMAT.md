@@ -29,9 +29,9 @@
   "startYear": 1985,
   "endYear": 2024,
   "years": [1985, 1986, "...", 2024],
-  "countryColors": { },
-  "countryCodes": { },
-  "countryFlagImages": { },
+  "entityColors": { },
+  "entityCodes": { },
+  "entityFlagImages": { },
   "dataset": [ ]
 }
 ```
@@ -47,9 +47,9 @@
 | `startYear` | number | 是 | 动画起始年份 |
 | `endYear` | number | 是 | 动画结束年份 |
 | `years` | number[] | 是 | 所有年份列表，需连续，如 `[1985, 1986, ..., 2024]` |
-| `countryColors` | object | 是 | 国家名 → 柱条颜色（十六进制） |
-| `countryCodes` | object | 是 | 国家名 → ISO 两位国家代码（小写） |
-| `countryFlagImages` | object | 是 | 国家名 → 国旗图片 URL 路径 |
+| `entityColors` | object | 是 | 经济体名 → 柱条颜色（十六进制） |
+| `entityCodes` | object | 是 | 经济体名 → ISO 两位代码（小写） |
+| `entityFlagImages` | object | 是 | 经济体名 → 国旗图片 URL 路径 |
 | `dataset` | array | 是 | ECharts 数据集，见下文 |
 
 ---
@@ -61,13 +61,13 @@
 ### 表头（固定顺序）
 
 ```json
-["GDP", "Country", "Year"]
+["GDP", "Entity", "Year"]
 ```
 
 | 列序号 | 列名 | 类型 | 说明 |
 |--------|------|------|------|
 | 0 | GDP | number | 数值，单位与 `unit` 一致（当前为 **百万美元**） |
-| 1 | Country | string | 国家名称，建议英文大写，如 `CHINA` |
+| 1 | Entity | string | 经济体名称，建议英文大写，如 `CHINA` |
 | 2 | Year | number | 年份，如 `2024` |
 
 ### 数据行示例
@@ -80,19 +80,19 @@
 
 ### 完整性要求
 
-- **每个国家 × 每个年份** 都应有一条记录
-- 若有 15 个国家、40 年，则应有 `15 × 40 = 600` 条数据行（不含表头）
-- 同一 `(Country, Year)` 组合不能重复
+- **每个经济体 × 每个年份** 都应有一条记录
+- 若有 15 个经济体、40 年，则应有 `15 × 40 = 600` 条数据行（不含表头）
+- 同一 `(Entity, Year)` 组合不能重复
 - `Year` 必须落在 `startYear` ~ `endYear` 范围内
 - `years` 数组应与数据中的年份一致
 
 ---
 
-## 4. 国家元数据
+## 4. 经济体元数据
 
-### countryColors
+### entityColors
 
-柱条颜色，键为国家名（与 dataset 中 `Country` 完全一致）：
+柱条颜色，键为经济体名（与 dataset 中 `Entity` 完全一致）：
 
 ```json
 {
@@ -102,7 +102,7 @@
 }
 ```
 
-### countryCodes
+### entityCodes
 
 ISO 3166-1 alpha-2 两位代码（小写），用于匹配国旗文件：
 
@@ -114,7 +114,7 @@ ISO 3166-1 alpha-2 两位代码（小写），用于匹配国旗文件：
 }
 ```
 
-### countryFlagImages
+### entityFlagImages
 
 国旗图片路径，通常放在 `frontend/public/flags/`：
 
@@ -143,20 +143,20 @@ ISO 3166-1 alpha-2 两位代码（小写），用于匹配国旗文件：
   "startYear": 1985,
   "endYear": 1987,
   "years": [1985, 1986, 1987],
-  "countryColors": {
+  "entityColors": {
     "CHINA": "#e85d6a",
     "JAPAN": "#c77dba"
   },
-  "countryCodes": {
+  "entityCodes": {
     "CHINA": "cn",
     "JAPAN": "jp"
   },
-  "countryFlagImages": {
+  "entityFlagImages": {
     "CHINA": "/flags/cn.png",
     "JAPAN": "/flags/jp.png"
   },
   "dataset": [
-    ["GDP", "Country", "Year"],
+    ["GDP", "Entity", "Year"],
     [310000, "CHINA", 1985],
     [1380000, "JAPAN", 1985],
     [350000, "CHINA", 1986],
@@ -175,7 +175,7 @@ ISO 3166-1 alpha-2 两位代码（小写），用于匹配国旗文件：
 
 ### 建议表结构（长表）
 
-| GDP | Country | Year |
+| GDP | Entity | Year |
 |-----|---------|------|
 | 310000 | CHINA | 1985 |
 | 1380000 | JAPAN | 1985 |
@@ -183,10 +183,10 @@ ISO 3166-1 alpha-2 两位代码（小写），用于匹配国旗文件：
 
 ### 注意事项
 
-1. **国家名统一**：`CHINA` 与 `China` 会被视为不同国家，请全程保持一致
+1. **经济体名统一**：`CHINA` 与 `China` 会被视为不同经济体，请全程保持一致
 2. **数值单位统一**：当前为 **million USD（百万美元）**，不要在同一数据集中混用 billion
-3. **排名展示**：图表只显示每年 GDP 最高的前 `maxBars` 名（默认 10），但 dataset 可包含更多国家
-4. **缺失年份**：若某国某年无数据，请不要留空行，应补 0 或从数据源中剔除该国家
+3. **排名展示**：图表只显示每年 GDP 最高的前 `maxBars` 名（默认 10），但 dataset 可包含更多经济体
+4. **缺失年份**：若某实体某年无数据，请不要留空行，应补 0 或从数据源中剔除该经济体
 
 ---
 
@@ -198,7 +198,7 @@ ISO 3166-1 alpha-2 两位代码（小写），用于匹配国旗文件：
 | 1 万亿美元（trillion） | × 1,000,000 |
 | 100 万美元 | ÷ 1 |
 
-示例：中国 GDP 18.27 万亿美元 ≈ `18270000`（million USD）
+示例：CHN GDP 18.27 万亿美元 ≈ `18270000`（million USD）
 
 ---
 
@@ -216,7 +216,7 @@ data/asia-gdp.json
 POST /api/asia-gdp/export
 ```
 
-后端从数据库读取后，需组装为与上文相同的 JSON 结构（含 `dataset`、`countryColors` 等字段）。
+后端从数据库读取后，需组装为与上文相同的 JSON 结构（含 `dataset`、`entityColors` 等字段）。
 
 ---
 
@@ -225,12 +225,12 @@ POST /api/asia-gdp/export
 准备完数据后，请确认：
 
 - [ ] `chartType` 为 `bar-race`
-- [ ] `dataset` 第一行是 `["GDP", "Country", "Year"]`
-- [ ] 所有 `Country` 在 `countryColors` / `countryCodes` / `countryFlagImages` 中均有配置
+- [ ] `dataset` 第一行是 `["GDP", "Entity", "Year"]`
+- [ ] 所有 `Entity` 在 `entityColors` / `entityCodes` / `entityFlagImages` 中均有配置
 - [ ] 对应国旗文件已放入 `frontend/public/flags/`
 - [ ] `years` 数组连续且与数据年份匹配
 - [ ] GDP 数值为正数
-- [ ] 国家名、单位、年份在整个文件中保持一致
+- [ ] 经济体名、单位、年份在整个文件中保持一致
 
 ---
 

@@ -14,8 +14,8 @@
 
     <section class="admin-stats">
       <article class="stat-card">
-        <span class="stat-label">Countries</span>
-        <strong class="stat-value">{{ stats?.countryCount ?? '—' }}</strong>
+        <span class="stat-label">Entities</span>
+        <strong class="stat-value">{{ stats?.entityCount ?? '—' }}</strong>
       </article>
       <article class="stat-card">
         <span class="stat-label">Indicators</span>
@@ -55,7 +55,7 @@
       :error="countryError"
       :keyword="countryKeyword"
       search-placeholder="Search code / name / region"
-      create-label="Add Country"
+      create-label="Add Entity"
       @search="onCountrySearch"
       @page-change="onCountryPageChange"
       @create="openCountryCreate"
@@ -99,7 +99,7 @@
           v-model="gdpCountryCode"
           type="text"
           class="admin-input"
-          placeholder="Country code (CHN)"
+          placeholder="Entity code (CHN)"
           maxlength="3"
         />
         <input
@@ -114,15 +114,15 @@
       </template>
     </AdminDataTable>
 
-    <!-- Country modal -->
+    <!-- Entity modal -->
     <AdminModal :visible="countryModalOpen" :title="countryModalTitle" @close="closeCountryModal">
       <div class="form-grid">
         <label>
-          <span>Country Code *</span>
+          <span>Code *</span>
           <input v-model="countryForm.countryCode" class="admin-input" maxlength="3" />
         </label>
         <label>
-          <span>Country Name *</span>
+          <span>Name *</span>
           <input v-model="countryForm.countryName" class="admin-input" />
         </label>
         <label>
@@ -180,9 +180,9 @@
     <AdminModal :visible="gdpModalOpen" :title="gdpModalTitle" @close="closeGdpModal">
       <div class="form-grid">
         <label class="full-width">
-          <span>Country *</span>
+          <span>Entity *</span>
           <select v-model="gdpForm.countryId" class="admin-select full">
-            <option value="">Select country</option>
+            <option value="">Select entity</option>
             <option v-for="item in countryOptions" :key="item.id" :value="item.id">
               {{ item.countryCode }} — {{ item.countryName }}
             </option>
@@ -241,7 +241,7 @@ import {
 } from '../../api/wbAdminApi'
 
 const tabs = [
-  { id: 'countries', label: 'wb_country' },
+  { id: 'countries', label: 'Entities (wb_country)' },
   { id: 'indicators', label: 'wb_indicator' },
   { id: 'gdp', label: 'wb_gdp_value' }
 ]
@@ -271,7 +271,7 @@ const indicatorColumns = [
 
 const gdpColumns = [
   { key: 'id', label: 'ID', mono: true, width: '180px' },
-  { key: 'countryCode', label: 'Country', width: '80px' },
+  { key: 'countryCode', label: 'Code', width: '80px' },
   { key: 'countryName', label: 'Name' },
   { key: 'indicatorCode', label: 'Indicator', width: '140px' },
   { key: 'gdpYear', label: 'Year', width: '80px' },
@@ -321,7 +321,7 @@ const countryFormError = ref('')
 const countryForm = ref(emptyCountryForm())
 
 const countryModalTitle = computed(() =>
-  countryEditingId.value ? 'Edit Country' : 'Add Country'
+  countryEditingId.value ? 'Edit Entity' : 'Add Entity'
 )
 
 // indicator modal
@@ -514,7 +514,7 @@ async function saveCountry() {
 }
 
 async function confirmCountryDelete(row) {
-  if (!window.confirm(`Delete country ${row.countryCode}?`)) return
+  if (!window.confirm(`Delete entity ${row.countryCode}?`)) return
   try {
     await deleteCountry(row.id)
     await Promise.all([loadCountries(), loadStats(), loadCountryOptions()])

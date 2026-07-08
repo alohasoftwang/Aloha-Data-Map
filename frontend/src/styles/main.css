@@ -162,6 +162,48 @@ body {
   font-size: 13px;
 }
 
+.menu-sub-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-sub-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 20px 10px 36px;
+  border: none;
+  background: transparent;
+  color: var(--mist);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s, color 0.2s;
+}
+
+.menu-sub-group-title:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--pearl);
+}
+
+.menu-sub-group-title.expanded {
+  color: var(--gold);
+}
+
+.menu-sub-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 2px;
+}
+
+.menu-sub-sub-item {
+  padding-left: 52px;
+  font-size: 13px;
+}
+
 .content {
   flex: 1;
   padding: 0;
@@ -279,6 +321,175 @@ body {
 
 .chart-state.error {
   color: #e07a7a;
+}
+
+.dual-curve-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 0 20px 12px;
+  flex-wrap: wrap;
+}
+
+.dual-curve-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.dual-curve-picker span {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+
+.dual-curve-select {
+  appearance: none;
+  background: rgba(26, 34, 52, 0.55);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  color: var(--pearl);
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.dual-curve-select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.treemap-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0 20px 10px;
+}
+
+.treemap-year-display {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.treemap-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: 0 16px 16px;
+  overflow: hidden;
+}
+
+.chart-panel--treemap {
+  height: 100vh;
+  min-height: 0;
+  max-height: 100vh;
+}
+
+.chart-panel--treemap .chart-header {
+  padding: 18px 16px 4px;
+}
+
+.chart-panel--treemap .chart-header-actions {
+  top: 18px;
+}
+
+.chart-panel--treemap .chart-title {
+  font-size: 26px;
+  white-space: normal;
+  line-height: 1.15;
+}
+
+.chart-panel--treemap .chart-unit {
+  font-size: 14px;
+  margin-left: 8px;
+}
+
+.chart-panel--treemap:fullscreen .chart-header {
+  padding-top: 14px;
+}
+
+.chart-panel--treemap:fullscreen .treemap-body {
+  padding: 0 20px 20px;
+}
+
+.treemap-year-picker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: min(640px, 100%);
+}
+
+.treemap-year-picker span {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mist);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.treemap-year-slider {
+  flex: 1;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+.treemap-year-input {
+  width: 88px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  background: rgba(26, 34, 52, 0.55);
+  color: var(--pearl);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.treemap-year-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.treemap-container {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+}
+
+.chart-panel:fullscreen .treemap-container {
+  min-height: 0;
+  max-height: 100%;
+}
+
+.dual-curve-vs {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  padding-top: 18px;
+}
+
+.dual-curve-container {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.chart-panel:fullscreen .dual-curve-container {
+  min-height: 0;
 }
 
 /* ------------------------------------------------------------------ */

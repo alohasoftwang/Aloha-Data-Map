@@ -47,7 +47,7 @@ function gdpAtYear(country, year) {
 }
 
 function buildDataset() {
-  const header = ['GDP', 'Country', 'Year']
+  const header = ['GDP', 'Entity', 'Year']
   const rows = []
 
   for (let year = START_YEAR; year <= END_YEAR; year++) {
@@ -59,15 +59,15 @@ function buildDataset() {
   return [header, ...rows]
 }
 
-const countryColors = Object.fromEntries(
+const entityColors = Object.fromEntries(
   COUNTRIES.map((c) => [c.name, c.color])
 )
 
-const countryCodes = Object.fromEntries(
+const entityCodes = Object.fromEntries(
   COUNTRIES.map((c) => [c.name, c.code])
 )
 
-const countryFlagImages = Object.fromEntries(
+const entityFlagImages = Object.fromEntries(
   COUNTRIES.map((c) => [c.name, `/flags/${c.code}.png`])
 )
 
@@ -81,8 +81,8 @@ export const worldGdpTop10Mock = {
   startYear: START_YEAR,
   endYear: END_YEAR,
   years: Array.from({ length: YEAR_COUNT }, (_, i) => START_YEAR + i),
-  countryColors,
-  countryCodes,
-  countryFlagImages,
+  entityColors,
+  entityCodes,
+  entityFlagImages,
   dataset: buildDataset()
 }

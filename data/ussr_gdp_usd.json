@@ -1,6 +1,6 @@
 {
-  "country_code": "SUN",
-  "country_name": "Soviet Union",
+  "entity_code": "SUN",
+  "entity_name": "Soviet Union",
   "indicator_code": "NY.GDP.MKTP.CD",
   "source": "Compiled estimates in current US$ (millions). 1970-1990: nominal GDP series widely cited in economic comparisons; 1960-1969: interpolated between 1960 and 1970 anchors; 1991: dissolution-year estimate.",
   "unit": "USD",

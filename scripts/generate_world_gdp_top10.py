@@ -31,24 +31,24 @@ ISO3_TO_ISO2: dict[str, str] = {
     "ERI": "er", "ESP": "es", "EST": "ee", "ETH": "et", "FIN": "fi", "FJI": "fj",
     "FRA": "fr", "FSM": "fm", "GAB": "ga", "GBR": "gb", "GEO": "ge", "GHA": "gh",
     "GIN": "gn", "GMB": "gm", "GNB": "gw", "GNQ": "gq", "GRC": "gr", "GRD": "gd",
-    "GTM": "gt", "GUY": "gy", "HND": "hn", "HRV": "hr", "HTI": "ht", "HUN": "hu",
+    "GTM": "gt", "GUY": "gy", "HKG": "hk", "HND": "hn", "HRV": "hr", "HTI": "ht", "HUN": "hu",
     "IDN": "id", "IND": "in", "IRL": "ie", "IRN": "ir", "IRQ": "iq", "ISL": "is",
     "ISR": "il", "ITA": "it", "JAM": "jm", "JOR": "jo", "JPN": "jp", "KAZ": "kz",
     "KEN": "ke", "KGZ": "kg", "KHM": "kh", "KIR": "ki", "KNA": "kn", "KOR": "kr",
     "KWT": "kw", "LAO": "la", "LBN": "lb", "LBR": "lr", "LBY": "ly", "LCA": "lc",
-    "LKA": "lk", "LSO": "ls", "LTU": "lt", "LUX": "lu", "LVA": "lv", "MAR": "ma",
+    "LKA": "lk", "LSO": "ls", "LTU": "lt", "LUX": "lu", "LVA": "lv", "MAC": "mo", "MAR": "ma",
     "MDA": "md", "MDG": "mg", "MDV": "mv", "MEX": "mx", "MHL": "mh", "MKD": "mk",
     "MLI": "ml", "MLT": "mt", "MMR": "mm", "MNE": "me", "MNG": "mn", "MOZ": "mz",
     "MRT": "mr", "MUS": "mu", "MWI": "mw", "MYS": "my", "NAM": "na", "NER": "ne",
     "NGA": "ng", "NIC": "ni", "NLD": "nl", "NOR": "no", "NPL": "np", "NRU": "nr",
     "NZL": "nz", "OMN": "om", "PAK": "pk", "PAN": "pa", "PER": "pe", "PHL": "ph",
-    "PNG": "pg", "POL": "pl", "PRI": "pr", "PRT": "pt", "PRY": "py", "PSE": "ps",
+    "PNG": "pg", "POL": "pl", "PRI": "pr", "PRT": "pt", "PRK": "kp", "PRY": "py", "PSE": "ps", "PYF": "pf",
     "QAT": "qa", "ROU": "ro", "RUS": "ru", "RWA": "rw", "SAU": "sa", "SDN": "sd",
     "SEN": "sn", "SGP": "sg", "SLB": "sb", "SLE": "sl", "SLV": "sv", "SMR": "sm",
     "SOM": "so", "SRB": "rs", "SSD": "ss", "STP": "st", "SUR": "sr", "SVK": "sk",
     "SVN": "si", "SWE": "se", "SWZ": "sz", "SYC": "sc", "SYR": "sy", "TCD": "td",
     "TGO": "tg", "THA": "th", "TJK": "tj", "TKM": "tm", "TLS": "tl", "TON": "to",
-    "TTO": "tt", "TUN": "tn", "TUR": "tr", "TUV": "tv", "TZA": "tz", "UGA": "ug",
+    "TTO": "tt", "TUN": "tn", "TUR": "tr", "TUV": "tv", "TWN": "tw", "TZA": "tz", "UGA": "ug",
     "UKR": "ua", "URY": "uy", "USA": "us", "UZB": "uz", "VCT": "vc", "VEN": "ve",
     "VNM": "vn", "VUT": "vu", "WSM": "ws", "XKX": "xk", "YEM": "ye", "ZAF": "za",
     "ZMB": "zm", "ZWE": "zw", "SUN": "su",
@@ -59,10 +59,11 @@ DISPLAY_NAME_OVERRIDES: dict[str, str] = {
     "USA": "UNITED STATES",
     "GBR": "UNITED KINGDOM",
     "KOR": "SOUTH KOREA",
+    "PRK": "NORTH KOREA",
     "RUS": "RUSSIA",
     "IRN": "IRAN",
     "VEN": "VENEZUELA",
-    "TUR": "TURKEY",
+    "TUR": "TURKIYE",
     "NLD": "NETHERLANDS",
     "CHE": "SWITZERLAND",
     "IDN": "INDONESIA",
@@ -84,8 +85,9 @@ DISPLAY_NAME_OVERRIDES: dict[str, str] = {
     "VNM": "VIETNAM",
     "MYS": "MALAYSIA",
     "SGP": "SINGAPORE",
-    "HKG": "HONG KONG",
-    "TWN": "TAIWAN",
+    "HKG": "HONG KONG (※)",
+    "MAC": "MACAO (※)",
+    "TWN": "TAIWAN (※)",
     "SUN": "SOVIET UNION",
 }
 
@@ -110,7 +112,7 @@ COUNTRY_COLORS: dict[str, str] = {
     "INDONESIA": "#d4a574",
     "NETHERLANDS": "#f08080",
     "SAUDI ARABIA": "#98d8a0",
-    "TURKEY": "#c9a0dc",
+    "TURKIYE": "#c9a0dc",
     "SWITZERLAND": "#ffb347",
 }
 
@@ -207,17 +209,17 @@ def build_chart(rows: list[tuple], start_year: int) -> dict:
         reverse=True,
     )
 
-    dataset: list = [["GDP", "Country", "Year"]]
-    country_colors: dict[str, str] = {}
-    country_codes: dict[str, str] = {}
-    country_flag_images: dict[str, str] = {}
+    dataset: list = [["GDP", "Entity", "Year"]]
+    entity_colors: dict[str, str] = {}
+    entity_codes: dict[str, str] = {}
+    entity_flag_images: dict[str, str] = {}
 
     for idx, code in enumerate(selected):
         name = by_country[code]["name"]
         iso2 = ISO3_TO_ISO2.get(code, code.lower()[:2])
-        country_colors[name] = pick_color(name, idx)
-        country_codes[name] = iso2
-        country_flag_images[name] = f"/flags/{iso2}.png"
+        entity_colors[name] = pick_color(name, idx)
+        entity_codes[name] = iso2
+        entity_flag_images[name] = f"/flags/{iso2}.png"
 
         for year in years:
             value = by_country[code]["years"].get(year)
@@ -238,16 +240,16 @@ def build_chart(rows: list[tuple], start_year: int) -> dict:
         "startYear": years[0],
         "endYear": end_year,
         "years": years,
-        "countryColors": country_colors,
-        "countryCodes": country_codes,
-        "countryFlagImages": country_flag_images,
+        "entityColors": entity_colors,
+        "entityCodes": entity_codes,
+        "entityFlagImages": entity_flag_images,
         "dataset": dataset,
         "_meta": {
             "source": "mysql:aloha_datamap",
             "indicator": INDICATOR_CODE,
-            "countryCount": len(selected),
+            "entityCount": len(selected),
             "rowCount": len(dataset) - 1,
-            "note": "Countries that appeared in global GDP top 15 at least once",
+            "note": "Entities that appeared in global GDP top 15 at least once",
         },
     }
 
@@ -286,8 +288,8 @@ def main() -> None:
     print(f"Generated: {output}")
     print(f"Generated: {PUBLIC_OUTPUT_PATH}")
     print(f"Years: {chart['startYear']}-{chart['endYear']}")
-    print(f"Countries: {meta['countryCount']}, Rows: {meta['rowCount']}")
-    print("Countries:", ", ".join(chart["countryCodes"].keys()))
+    print(f"Entities: {meta['entityCount']}, Rows: {meta['rowCount']}")
+    print("Entities:", ", ".join(chart["entityCodes"].keys()))
 
 
 if __name__ == "__main__":

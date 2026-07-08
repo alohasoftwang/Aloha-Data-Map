@@ -16,22 +16,31 @@ function formatAxisValue(value) {
   return String(value)
 }
 
-import { getFlagAspectRatio } from './flagAspectRatios.js'
+import {
+  FLAG_DISPLAY_HEIGHT_BAR,
+  getFlagDisplaySize
+} from './flagAspectRatios.js'
 
-const FLAG_HEIGHT = 36
+const FLAG_HEIGHT = FLAG_DISPLAY_HEIGHT_BAR
 const FLAG_PADDING_V = 3
 const FLAG_PADDING_H = 5
 const FLAG_BAR_HEIGHT = FLAG_HEIGHT + FLAG_PADDING_V * 2
-
-function getFlagDisplayWidth(code) {
-  return Math.round(FLAG_HEIGHT * getFlagAspectRatio(code))
-}
 
 function flagRichKey(code) {
   return `flag_${code}`
 }
 
-function buildFlagRichStyles(countryCodes, countryFlagImages) {
+function resolveEntityChartData(chartData) {
+  return {
+    entityColors: chartData.entityColors ?? chartData.countryColors ?? {},
+    entityCodes: chartData.entityCodes ?? chartData.countryCodes ?? {},
+    entityFlagImages: chartData.entityFlagImages ?? chartData.countryFlagImages ?? {},
+    updateFrequency: chartData.updateFrequency,
+    maxBars: chartData.maxBars
+  }
+}
+
+function buildFlagRichStyles(entityCodes, entityFlagImages) {
   const rich = {
     gdp: {
       color: '#ff3b3b',
@@ -51,11 +60,13 @@ function buildFlagRichStyles(countryCodes, countryFlagImages) {
     }
   }
 
-  for (const [country, code] of Object.entries(countryCodes)) {
+  for (const [entityName, code] of Object.entries(entityCodes)) {
+    const { width, height } = getFlagDisplaySize(code, FLAG_HEIGHT)
     rich[flagRichKey(code)] = {
-      height: FLAG_HEIGHT,
-      width: getFlagDisplayWidth(code),
+      height,
+      width,
       align: 'left',
+      verticalAlign: 'middle',
       padding: [FLAG_PADDING_V, FLAG_PADDING_H],
       borderRadius: 4,
       shadowColor: 'rgba(0, 0, 0, 0.55)',
@@ -63,7 +74,7 @@ function buildFlagRichStyles(countryCodes, countryFlagImages) {
       shadowOffsetX: 0,
       shadowOffsetY: 3,
       backgroundColor: {
-        image: countryFlagImages[country]
+        image: entityFlagImages[entityName]
       }
     }
   }
@@ -76,11 +87,11 @@ function getMaxGdp(source) {
   return body.length ? Math.max(...body.map((row) => row[0])) : 0
 }
 
-function createLabelFormatter(countryCodes, maxGdp) {
+function createLabelFormatter(entityCodes, maxGdp) {
   return function labelFormatter(param) {
     const gdp = Array.isArray(param.value) ? param.value[0] : param.value
-    const country = Array.isArray(param.value) ? param.value[1] : param.name
-    const code = countryCodes?.[country]
+    const entityName = Array.isArray(param.value) ? param.value[1] : param.name
+    const code = entityCodes?.[entityName]
     if (!code) return ''
     const gdpStyle = gdp === maxGdp ? 'gdpTop' : 'gdp'
     return `{${flagRichKey(code)}| }{${gdpStyle}|${formatGdpValue(gdp)}}`
@@ -92,11 +103,11 @@ export function getYearData(dataset, year) {
   return [header, ...rows.filter((row) => row[2] === year)]
 }
 
-export function buildBarRaceOption(chartData, year, { showYear = false } = {}) {
+export function buildBarRaceOption(chartData, year, { showYear = false, gridLeft = 175 } = {}) {
   const source = getYearData(chartData.dataset, year)
-  const { countryColors, countryCodes, countryFlagImages, updateFrequency, maxBars } =
-    chartData
-  const flagRich = buildFlagRichStyles(countryCodes, countryFlagImages)
+  const { entityColors, entityCodes, entityFlagImages, updateFrequency, maxBars } =
+    resolveEntityChartData(chartData)
+  const flagRich = buildFlagRichStyles(entityCodes, entityFlagImages)
   const maxGdp = getMaxGdp(source)
 
   return {
@@ -104,7 +115,7 @@ export function buildBarRaceOption(chartData, year, { showYear = false } = {}) {
     grid: {
       top: 12,
       bottom: 48,
-      left: 175,
+      left: gridLeft,
       right: 320,
       containLabel: false
     },
@@ -163,7 +174,7 @@ export function buildBarRaceOption(chartData, year, { showYear = false } = {}) {
         encode: { x: 0, y: 1 },
         itemStyle: {
           color(param) {
-            return countryColors[param.value[1]] || '#5470c6'
+            return entityColors[param.value[1]] || '#5470c6'
           },
           borderRadius: 4,
           shadowColor: 'rgba(0, 0, 0, 0.35)',
@@ -178,7 +189,7 @@ export function buildBarRaceOption(chartData, year, { showYear = false } = {}) {
           overflow: 'none',
           valueAnimation: true,
           rich: flagRich,
-          formatter: createLabelFormatter(countryCodes, maxGdp)
+          formatter: createLabelFormatter(entityCodes, maxGdp)
         }
       }
     ],
@@ -207,12 +218,13 @@ export function buildBarRaceOption(chartData, year, { showYear = false } = {}) {
 export function updateBarRaceYear(chart, chartData, year, { showYear = true } = {}) {
   const source = getYearData(chartData.dataset, year)
   const maxGdp = getMaxGdp(source)
+  const { entityCodes } = resolveEntityChartData(chartData)
 
   chart.setOption({
     dataset: { source },
     series: [{
       label: {
-        formatter: createLabelFormatter(chartData.countryCodes, maxGdp)
+        formatter: createLabelFormatter(entityCodes, maxGdp)
       }
     }],
     graphic: {

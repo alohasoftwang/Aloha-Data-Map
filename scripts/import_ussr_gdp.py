@@ -33,9 +33,11 @@ def parse_args():
 def load_payload(path: Path) -> dict:
     payload = json.loads(path.read_text(encoding="utf-8"))
     values = {int(year): float(amount) for year, amount in payload["values"].items()}
+    entity_code = payload.get("entity_code") or payload.get("country_code")
+    entity_name = payload.get("entity_name") or payload.get("country_name")
     return {
-        "country_code": payload["country_code"],
-        "country_name": payload["country_name"],
+        "entity_code": entity_code,
+        "entity_name": entity_name,
         "indicator_code": payload.get("indicator_code", INDICATOR_CODE),
         "source": payload.get("source", ""),
         "values": values,
@@ -74,12 +76,12 @@ def main() -> None:
 
             cur.execute(
                 "SELECT id FROM wb_country WHERE country_code = %s",
-                (payload["country_code"],),
+                (payload["entity_code"],),
             )
             row = cur.fetchone()
             if row:
                 country_id = row[0]
-                print(f"Country {COUNTRY_CODE} already exists: {country_id}")
+                print(f"Entity {COUNTRY_CODE} already exists: {country_id}")
             else:
                 country_id = id_gen.next_id()
                 cur.execute(
@@ -90,14 +92,14 @@ def main() -> None:
                     """,
                     (
                         country_id,
-                        payload["country_code"],
-                        payload["country_name"],
+                        payload["entity_code"],
+                        payload["entity_name"],
                         "Europe & Central Asia",
                         "Upper middle income",
-                        payload["country_name"],
+                        payload["entity_name"],
                     ),
                 )
-                print(f"Inserted country {COUNTRY_CODE}: {country_id}")
+                print(f"Inserted entity {COUNTRY_CODE}: {country_id}")
 
             cur.execute(
                 """
@@ -105,7 +107,7 @@ def main() -> None:
                 JOIN wb_country c ON c.id = g.country_id
                 WHERE c.country_code = %s
                 """,
-                (payload["country_code"],),
+                (payload["entity_code"],),
             )
             deleted_ussr = cur.rowcount
 

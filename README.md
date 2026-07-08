@@ -13,7 +13,7 @@ Aloha-Data-Map/
 
 ## 数据流
 
-1. 后端从数据库（H2 内存库）读取亚洲各国 GDP 数据
+1. 后端从数据库读取亚洲各经济体 GDP 数据
 2. 调用 `POST /api/asia-gdp/export` 可导出 `data/asia-gdp.json`
 3. 前端通过 `GET /api/asia-gdp` 获取数据，用 ECharts 渲染柱状图
 
@@ -47,4 +47,4 @@ npm run dev
 
 ## 当前菜单
 
-- **亚洲GDP** — 亚洲主要国家 GDP 柱状图（单位：万亿美元）
+- **亚洲 GDP** — 亚洲主要经济体 GDP 动态排序图（单位：百万美元）

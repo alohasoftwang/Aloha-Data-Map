@@ -45,6 +45,10 @@ const props = defineProps({
   error: {
     type: String,
     default: ''
+  },
+  gridLeft: {
+    type: Number,
+    default: 175
   }
 })
 
@@ -86,7 +90,10 @@ function resetToStartYear() {
   currentYear.value = props.chartData.startYear
   chartInstance.clear()
   chartInstance.setOption(
-    buildBarRaceOption(props.chartData, props.chartData.startYear, { showYear: false }),
+    buildBarRaceOption(props.chartData, props.chartData.startYear, {
+      showYear: false,
+      gridLeft: props.gridLeft
+    }),
     true
   )
 }

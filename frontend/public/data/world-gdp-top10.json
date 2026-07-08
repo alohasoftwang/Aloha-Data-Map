@@ -75,7 +75,7 @@
     2024,
     2025
   ],
-  "countryColors": {
+  "entityColors": {
     "UNITED STATES": "#5b9fd4",
     "CHINA": "#e85d6a",
     "GERMANY": "#7aabde",
@@ -99,7 +99,7 @@
     "IRAN": "#c77dba",
     "SOVIET UNION": "#cc2b2b"
   },
-  "countryCodes": {
+  "entityCodes": {
     "UNITED STATES": "us",
     "CHINA": "cn",
     "GERMANY": "de",
@@ -123,7 +123,7 @@
     "IRAN": "ir",
     "SOVIET UNION": "su"
   },
-  "countryFlagImages": {
+  "entityFlagImages": {
     "UNITED STATES": "/flags/us.png",
     "CHINA": "/flags/cn.png",
     "GERMANY": "/flags/de.png",
@@ -150,7 +150,7 @@
   "dataset": [
     [
       "GDP",
-      "Country",
+      "Entity",
       "Year"
     ],
     [
@@ -7087,8 +7087,8 @@
   "_meta": {
     "source": "mysql:aloha_datamap",
     "indicator": "NY.GDP.MKTP.CD",
-    "countryCount": 22,
+    "entityCount": 22,
     "rowCount": 1386,
-    "note": "Countries that appeared in global GDP top 15 at least once"
+    "note": "Entities that appeared in global GDP top 15 at least once"
   }
 }

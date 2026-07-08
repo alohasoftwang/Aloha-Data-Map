@@ -72,7 +72,7 @@ public class WbAdminService {
     public WbCountryDto createCountry(WbCountryRequest request) {
         validateCountryRequest(request);
         if (countryRepository.findByCountryCode(request.countryCode().trim()).isPresent()) {
-            throw conflict("Country code already exists: " + request.countryCode());
+            throw conflict("Entity code already exists: " + request.countryCode());
         }
         WbCountry country = new WbCountry();
         country.setId(idGenerator.nextId());
@@ -86,7 +86,7 @@ public class WbAdminService {
         countryRepository.findByCountryCode(request.countryCode().trim())
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
-                    throw conflict("Country code already exists: " + request.countryCode());
+                    throw conflict("Entity code already exists: " + request.countryCode());
                 });
         applyCountry(country, request);
         return toCountryDto(countryRepository.save(country));
@@ -252,7 +252,7 @@ public class WbAdminService {
             return cb.and(predicates.toArray(Predicate[]::new));
         };
         if (gdpValueRepository.count(spec) > 0) {
-            throw conflict("GDP record already exists for this country, indicator and year");
+            throw conflict("GDP record already exists for this entity, indicator and year");
         }
     }
 
@@ -303,7 +303,7 @@ public class WbAdminService {
 
     private WbCountry findCountry(String id) {
         return countryRepository.findById(id)
-                .orElseThrow(() -> notFound("Country not found: " + id));
+                .orElseThrow(() -> notFound("Entity not found: " + id));
     }
 
     private WbIndicator findIndicator(String id) {

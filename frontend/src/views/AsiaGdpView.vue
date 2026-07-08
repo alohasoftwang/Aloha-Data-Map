@@ -1,5 +1,10 @@
 <template>
-  <BarRaceChart :chart-data="chartData" :loading="loading" :error="error" />
+  <BarRaceChart
+    :chart-data="chartData"
+    :loading="loading"
+    :error="error"
+    :grid-left="220"
+  />
 </template>
 
 <script setup>
@@ -15,7 +20,7 @@ onMounted(async () => {
   try {
     chartData.value = await fetchAsiaGdp()
   } catch (e) {
-    error.value = '无法加载亚洲GDP数据'
+    error.value = 'Failed to load Asia GDP data'
     console.error(e)
   } finally {
     loading.value = false
