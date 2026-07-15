@@ -9,6 +9,8 @@ export const CHINA_G7_ENTITIES = [
   'UNITED STATES'
 ]
 
+export const CJK_ENTITIES = ['CHINA', 'JAPAN', 'SOUTH KOREA']
+
 function pickEntityMeta(meta, entitySet) {
   return Object.fromEntries(
     Object.entries(meta ?? {}).filter(([name]) => entitySet.has(name))

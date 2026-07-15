@@ -38,9 +38,10 @@ public class WbAdminController {
     @GetMapping("/countries")
     public PageResponse<WbCountryDto> listCountries(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String codes,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return adminService.listCountries(keyword, page, size);
+        return adminService.listCountries(keyword, codes, page, size);
     }
 
     @GetMapping("/countries/all")

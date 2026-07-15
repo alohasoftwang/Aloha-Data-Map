@@ -39,7 +39,9 @@ ASPECT_BY_CODE = {
     "in": 3 / 2,
     "it": 3 / 2,
     "jp": 3 / 2,
+    "kh": 25 / 16,
     "kr": 3 / 2,
+    "la": 3 / 2,
     "lk": 3 / 2,
     "mv": 3 / 2,
     "mx": 7 / 4,
@@ -61,6 +63,7 @@ ASPECT_BY_CODE = {
     "tw": 3 / 2,
     "us": 19 / 10,
     "vn": 3 / 2,
+    "tl": 2.0,
 }
 
 SOVIET_URL = (
@@ -82,6 +85,20 @@ MYANMAR_URL = (
     "https://commons.wikimedia.org/wiki/Special:FilePath/"
     "Flag_of_Myanmar.svg?width=800"
 )
+WIKIMEDIA_FALLBACK = {
+    "lv": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Latvia.svg?width=800",
+    "mc": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Monaco.svg?width=800",
+    "pl": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Poland.svg?width=800",
+}
+
+
+def download_wikimedia(url: str, dest: Path) -> None:
+    result = subprocess.run(
+        ["curl.exe", "-sL", "-A", "Mozilla/5.0", url, "-o", str(dest)],
+        check=False,
+    )
+    if result.returncode != 0 or not dest.exists() or dest.stat().st_size < 200:
+        raise RuntimeError(f"download failed: {url}")
 
 
 def scale_flag(im: Image.Image, aspect_ratio: float, target_h: int = TARGET_H) -> Image.Image:
@@ -153,6 +170,8 @@ def normalize_file(path: Path, aspect_ratio: float | None = None, refresh: bool 
                 download_mongolia(tmp_path)
             elif code == "mm":
                 download_myanmar(tmp_path)
+            elif code in WIKIMEDIA_FALLBACK:
+                download_wikimedia(WIKIMEDIA_FALLBACK[code], tmp_path)
             else:
                 download_flagcdn(code, tmp_path)
             source = tmp_path

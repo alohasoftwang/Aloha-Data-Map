@@ -1,0 +1,14 @@
+/** 东南亚 11 国（与图表 JSON 显示名一致） */
+export const SOUTHEAST_ASIA_GDP_ENTITIES = [
+  'INDONESIA',
+  'THAILAND',
+  'MALAYSIA',
+  'SINGAPORE',
+  'VIETNAM',
+  'PHILIPPINES',
+  'MYANMAR',
+  'CAMBODIA',
+  'LAO PDR',
+  'BRUNEI DARUSSALAM',
+  'TIMOR-LESTE'
+]

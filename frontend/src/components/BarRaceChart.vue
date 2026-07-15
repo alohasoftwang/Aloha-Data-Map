@@ -8,6 +8,7 @@
         <p v-if="currentYear" class="chart-subtitle">{{ currentYear }}</p>
       </div>
       <div v-if="!isFullscreen" class="chart-header-actions">
+        <slot name="actions" />
         <FullscreenButton
           :is-fullscreen="isFullscreen"
           @toggle="handleFullscreenToggle"

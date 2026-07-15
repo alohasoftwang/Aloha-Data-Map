@@ -1,6 +1,7 @@
 import {
   getEntityMeta,
   indexDatasetByEntity,
+  padEntitySeriesFromStart,
   sliceEntitySeries,
   sliceEntitySeriesProgress
 } from './gdpDualCurveData.js'
@@ -23,6 +24,20 @@ function buildNameRichKey(entityName, code) {
   return `en_${code}_${slug}`
 }
 
+function calcGridRight(entities) {
+  const longestName = entities.reduce(
+    (max, name) => Math.max(max, name.length),
+    0
+  )
+  // 宽国旗（如东帝汶 2:1）+ 国家名，避免末端标签被裁切
+  return Math.max(210, 88 + Math.round(longestName * 8))
+}
+
+function formatEndLabelName(entityName) {
+  // ECharts rich text 对内容中的部分符号敏感，统一成可安全显示的文本
+  return String(entityName).replace(/-/g, ' ')
+}
+
 function buildEndLabelRich(entityName, code, flagUrl, { featured = false } = {}) {
   if (!code || !flagUrl) {
     return { rich: {}, label: '' }
@@ -35,6 +50,7 @@ function buildEndLabelRich(entityName, code, flagUrl, { featured = false } = {})
   )
   const flagKey = buildFlagRichKey(entityName, code)
   const nameKey = buildNameRichKey(entityName, code)
+  const displayName = formatEndLabelName(entityName)
 
   return {
     rich: {
@@ -58,7 +74,7 @@ function buildEndLabelRich(entityName, code, flagUrl, { featured = false } = {})
         verticalAlign: 'middle'
       }
     },
-    label: `{${flagKey}| }{${nameKey}|${entityName}}`
+    label: `{${flagKey}| }{${nameKey}|${displayName}}`
   }
 }
 
@@ -94,7 +110,7 @@ function buildFeaturedEndGraphic(entityName, meta, pixel) {
       {
         type: 'text',
         style: {
-          text: entityName,
+          text: formatEndLabelName(entityName),
           x: flagWidth + 8,
           y: flagHeight / 2,
           fill: '#eef3fa',
@@ -104,15 +120,6 @@ function buildFeaturedEndGraphic(entityName, meta, pixel) {
       }
     ]
   }
-}
-
-function calcGridRight(entities) {
-  const longestName = entities.reduce(
-    (max, name) => Math.max(max, name.length),
-    0
-  )
-  // 国旗 + 国家名，略留边距（原 240 偏大）
-  return Math.max(172, 56 + Math.round(longestName * 5.5))
 }
 
 function formatGdpAxis(value) {
@@ -172,7 +179,7 @@ function buildSeries(entityName, data, meta, animationDuration, { featured = fal
     symbol: 'circle',
     symbolSize: 0,
     data: seriesData,
-    clip: !featured,
+    clip: false,
     zlevel: featured ? 10 : 0,
     z: featured ? 100 : 1,
     lineStyle: {
@@ -186,7 +193,8 @@ function buildSeries(entityName, data, meta, animationDuration, { featured = fal
       show: data.length > 0 && !!endLabel.label && !featured,
       formatter: () => endLabel.label,
       rich: endLabel.rich,
-      distance: 14
+      distance: 14,
+      verticalAlign: 'middle'
     },
     emphasis: {
       focus: 'series',
@@ -218,8 +226,12 @@ export function buildGdpCurveOption(
   year,
   { showYear = false, animationDuration = 2250, featuredEntity = null } = {}
 ) {
-  const indexed = indexDatasetByEntity(chartData.dataset)
   const renderEntities = orderEntitiesForRender(entities, featuredEntity)
+  const indexed = padEntitySeriesFromStart(
+    indexDatasetByEntity(chartData.dataset),
+    renderEntities,
+    chartData.startYear
+  )
   const seriesDataList = renderEntities.map((entity) =>
     sliceEntitySeries(indexed, entity, year)
   )
@@ -229,7 +241,7 @@ export function buildGdpCurveOption(
     backgroundColor: 'transparent',
     grid: {
       top: 48,
-      bottom: 56,
+      bottom: 72,
       left: 72,
       right: calcGridRight(entities),
       containLabel: false
@@ -316,8 +328,12 @@ export function updateGdpCurveFrame(
     featuredEntity = null
   } = {}
 ) {
-  const indexed = indexDatasetByEntity(chartData.dataset)
   const renderEntities = orderEntitiesForRender(entities, featuredEntity)
+  const indexed = padEntitySeriesFromStart(
+    indexDatasetByEntity(chartData.dataset),
+    renderEntities,
+    chartData.startYear
+  )
   const frameContext = { fromYear, toYear, progress, displayYear }
   const seriesDataList = renderEntities.map((entity) =>
     sliceEntityData(indexed, entity, frameContext)
@@ -330,16 +346,29 @@ export function updateGdpCurveFrame(
 
   const seriesUpdate = renderEntities.map((entity, index) => {
     const isFeatured = entity === featuredEntity
+    const meta = metas[index]
+    const seriesData = seriesDataList[index]
+    const endLabel = buildEndLabelRich(entity, meta.code, meta.flag, {
+      featured: isFeatured
+    })
+
     return {
       name: entity,
-      data: buildSeriesData(seriesDataList[index], metas[index].color, {
+      data: buildSeriesData(seriesData, meta.color, {
         featured: isFeatured
       }),
-      clip: !isFeatured,
+      clip: false,
       zlevel: isFeatured ? 10 : 0,
       z: isFeatured ? 100 : index + 1,
       animationDurationUpdate: animationDuration,
-      animationEasingUpdate: animationEasing
+      animationEasingUpdate: animationEasing,
+      endLabel: {
+        show: seriesData.length > 0 && !!endLabel.label && !isFeatured,
+        formatter: () => endLabel.label,
+        rich: endLabel.rich,
+        distance: 14,
+        verticalAlign: 'middle'
+      }
     }
   })
 

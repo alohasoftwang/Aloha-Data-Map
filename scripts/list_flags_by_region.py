@@ -42,7 +42,7 @@ DISPLAY = {
     "SGP": "Singapore",
     "HKG": "Hong Kong",
     "MAC": "Macao",
-    "TWN": "Taiwan",
+    "TWN": "Taiwan, China",
     "SUN": "Soviet Union",
     "BRN": "Brunei",
     "PHL": "Philippines",

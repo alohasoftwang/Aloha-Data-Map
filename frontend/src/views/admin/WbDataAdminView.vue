@@ -2,12 +2,20 @@
   <div class="admin-page">
     <header class="admin-page-header">
       <div>
-        <h2>Data Management</h2>
-        <p>Manage World Bank tables: wb_country, wb_indicator, wb_gdp_value</p>
+        <h2>{{ t('admin.title') }}</h2>
+        <p>{{ t('admin.subtitle') }}</p>
       </div>
       <div class="admin-header-actions">
+        <button
+          type="button"
+          class="admin-btn secondary"
+          :disabled="refreshingCharts || importing"
+          @click="handleRefreshCharts"
+        >
+          {{ refreshingCharts ? t('admin.refreshingCharts') : t('admin.refreshCharts') }}
+        </button>
         <button type="button" class="admin-btn secondary" :disabled="importing" @click="handleImport">
-          {{ importing ? 'Importing...' : 'Re-import from Excel' }}
+          {{ importing ? t('admin.importing') : t('admin.reimport') }}
         </button>
       </div>
     </header>
@@ -61,7 +69,42 @@
       @create="openCountryCreate"
       @edit="openCountryEdit"
       @delete="confirmCountryDelete"
-    />
+    >
+      <template #filters>
+        <select v-model="filterContinent" class="admin-select geo-select" @change="onFilterContinentChange">
+          <option value="">{{ t('admin.selectContinent') }}</option>
+          <option v-for="id in CONTINENT_ORDER" :key="id" :value="id">
+            {{ t(`countries.continents.${id}`) }}
+          </option>
+        </select>
+        <select
+          v-model="filterSubregion"
+          class="admin-select geo-select"
+          :disabled="!filterContinent"
+        >
+          <option value="">{{ t('admin.allRegions') }}</option>
+          <option v-for="id in availableSubregions" :key="id" :value="id">
+            {{ t(`countries.regions.${id}`) }}
+          </option>
+        </select>
+        <button
+          type="button"
+          class="admin-btn secondary"
+          :disabled="!filterContinent"
+          @click="applyGeoFilter"
+        >
+          {{ t('admin.filter') }}
+        </button>
+        <button
+          v-if="geoFilterActive"
+          type="button"
+          class="admin-btn secondary"
+          @click="clearGeoFilter"
+        >
+          {{ t('admin.clearFilter') }}
+        </button>
+      </template>
+    </AdminDataTable>
 
     <AdminDataTable
       v-else-if="activeTab === 'indicators'"
@@ -219,8 +262,14 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AdminDataTable from '../../components/admin/AdminDataTable.vue'
 import AdminModal from '../../components/admin/AdminModal.vue'
+import {
+  CONTINENT_ORDER,
+  SUBREGION_ORDER,
+  listIso3ByGeography
+} from '../../config/countryGeography.js'
 import {
   createCountry,
   createGdpValue,
@@ -234,11 +283,14 @@ import {
   fetchGdpValues,
   fetchIndicators,
   fetchWbStats,
+  refreshChartJson,
   triggerWbImport,
   updateCountry,
   updateGdpValue,
   updateIndicator
 } from '../../api/wbAdminApi'
+
+const { t } = useI18n()
 
 const tabs = [
   { id: 'countries', label: 'Entities (wb_country)' },
@@ -249,35 +301,36 @@ const tabs = [
 const activeTab = ref('countries')
 const stats = ref(null)
 const importing = ref(false)
+const refreshingCharts = ref(false)
 
 const countryColumns = [
-  { key: 'id', label: 'ID', mono: true, width: '180px' },
-  { key: 'countryCode', label: 'Code', width: '80px' },
-  { key: 'countryName', label: 'Name' },
-  { key: 'region', label: 'Region' },
-  { key: 'incomeGroup', label: 'Income Group' }
+  { key: 'id', labelKey: 'admin.table.id', mono: true, width: '180px', hidden: true },
+  { key: 'countryCode', labelKey: 'admin.table.code', width: '80px' },
+  { key: 'countryName', labelKey: 'admin.table.name' },
+  { key: 'region', labelKey: 'admin.table.region' },
+  { key: 'incomeGroup', labelKey: 'admin.table.incomeGroup' }
 ]
 
 const indicatorColumns = [
-  { key: 'id', label: 'ID', mono: true, width: '180px' },
-  { key: 'indicatorCode', label: 'Code', width: '140px' },
-  { key: 'indicatorName', label: 'Name' },
+  { key: 'id', labelKey: 'admin.table.id', mono: true, width: '180px', hidden: true },
+  { key: 'indicatorCode', labelKey: 'admin.table.code', width: '140px' },
+  { key: 'indicatorName', labelKey: 'admin.table.name' },
   {
     key: 'sourceOrganization',
-    label: 'Source',
+    labelKey: 'admin.table.source',
     formatter: (v) => (v && v.length > 60 ? `${v.slice(0, 60)}...` : v)
   }
 ]
 
 const gdpColumns = [
-  { key: 'id', label: 'ID', mono: true, width: '180px' },
-  { key: 'countryCode', label: 'Code', width: '80px' },
-  { key: 'countryName', label: 'Name' },
-  { key: 'indicatorCode', label: 'Indicator', width: '140px' },
-  { key: 'gdpYear', label: 'Year', width: '80px' },
+  { key: 'id', labelKey: 'admin.table.id', mono: true, width: '180px', hidden: true },
+  { key: 'countryCode', labelKey: 'admin.table.code', width: '80px' },
+  { key: 'countryName', labelKey: 'admin.table.name' },
+  { key: 'indicatorCode', labelKey: 'admin.table.indicator', width: '140px' },
+  { key: 'gdpYear', labelKey: 'admin.table.year', width: '80px' },
   {
     key: 'valueUsd',
-    label: 'Value (USD)',
+    labelKey: 'admin.table.valueUsd',
     formatter: (v) => Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 })
   }
 ]
@@ -288,8 +341,17 @@ const countryPage = ref(null)
 const countryLoading = ref(false)
 const countryError = ref('')
 const countryKeyword = ref('')
+const countryCodeFilter = ref('')
+const geoFilterActive = ref(false)
+const filterContinent = ref('')
+const filterSubregion = ref('')
 const countryPageIndex = ref(0)
 const countryPageSize = ref(20)
+
+const availableSubregions = computed(() => {
+  if (!filterContinent.value) return []
+  return SUBREGION_ORDER[filterContinent.value] ?? []
+})
 
 // indicators state
 const indicatorRows = ref([])
@@ -392,6 +454,7 @@ async function loadCountries() {
   try {
     const data = await fetchCountries({
       keyword: countryKeyword.value || undefined,
+      codes: countryCodeFilter.value || undefined,
       page: countryPageIndex.value,
       size: countryPageSize.value
     })
@@ -443,6 +506,47 @@ async function loadGdpValues() {
 
 function onCountrySearch(keyword) {
   countryKeyword.value = keyword
+  countryPageIndex.value = 0
+  loadCountries()
+}
+
+function onFilterContinentChange() {
+  filterSubregion.value = ''
+}
+
+function applyGeoFilter() {
+  if (!filterContinent.value) return
+  const codes = listIso3ByGeography({
+    continent: filterContinent.value,
+    subregion: filterSubregion.value || undefined
+  })
+  countryPageIndex.value = 0
+  if (countryPageSize.value < 100) {
+    countryPageSize.value = 100
+  }
+  if (!codes.length) {
+    countryCodeFilter.value = ''
+    geoFilterActive.value = true
+    countryRows.value = []
+    countryPage.value = {
+      content: [],
+      page: 0,
+      size: countryPageSize.value,
+      totalElements: 0,
+      totalPages: 0
+    }
+    return
+  }
+  countryCodeFilter.value = codes.join(',')
+  geoFilterActive.value = true
+  loadCountries()
+}
+
+function clearGeoFilter() {
+  filterContinent.value = ''
+  filterSubregion.value = ''
+  countryCodeFilter.value = ''
+  geoFilterActive.value = false
   countryPageIndex.value = 0
   loadCountries()
 }
@@ -630,6 +734,22 @@ async function confirmGdpDelete(row) {
     await Promise.all([loadGdpValues(), loadStats()])
   } catch (err) {
     window.alert(err.message)
+  }
+}
+
+async function handleRefreshCharts() {
+  if (!window.confirm(t('admin.refreshChartsConfirm'))) {
+    return
+  }
+  refreshingCharts.value = true
+  try {
+    const result = await refreshChartJson()
+    const names = (result.files || []).map((f) => f.id).join(', ')
+    window.alert(`${result.message || t('admin.refreshChartsDone')}\n${names}`)
+  } catch (err) {
+    window.alert(err.message)
+  } finally {
+    refreshingCharts.value = false
   }
 }
 

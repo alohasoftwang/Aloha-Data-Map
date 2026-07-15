@@ -93,28 +93,50 @@ function createLabelFormatter(entityCodes, maxGdp) {
     const entityName = Array.isArray(param.value) ? param.value[1] : param.name
     const code = entityCodes?.[entityName]
     if (!code) return ''
+    // 无数据占位为 0：只显示国旗，不显示数字
+    if (!gdp) {
+      return `{${flagRichKey(code)}| }`
+    }
     const gdpStyle = gdp === maxGdp ? 'gdpTop' : 'gdp'
     return `{${flagRichKey(code)}| }{${gdpStyle}|${formatGdpValue(gdp)}}`
   }
 }
 
-export function getYearData(dataset, year) {
+export function getYearData(dataset, year, allEntities = null) {
   const [header, ...rows] = dataset
-  return [header, ...rows.filter((row) => row[2] === year)]
+  const yearRows = rows.filter((row) => row[2] === year)
+
+  if (!allEntities?.length) {
+    return [header, ...yearRows]
+  }
+
+  // 尚无该年数据的实体先用 0 占位，保证国旗/名额从一开始就齐全
+  const byName = new Map(yearRows.map((row) => [row[1], row]))
+  return [
+    header,
+    ...allEntities.map((name) => byName.get(name) ?? [0, name, year])
+  ]
 }
 
 export function buildBarRaceOption(chartData, year, { showYear = false, gridLeft = 175 } = {}) {
-  const source = getYearData(chartData.dataset, year)
   const { entityColors, entityCodes, entityFlagImages, updateFrequency, maxBars } =
     resolveEntityChartData(chartData)
+  const allEntities = Object.keys(entityCodes)
+  const source = getYearData(chartData.dataset, year, allEntities)
   const flagRich = buildFlagRichStyles(entityCodes, entityFlagImages)
   const maxGdp = getMaxGdp(source)
+  const barCount = Math.max(maxBars || allEntities.length || 1, 1)
+  // 条数少时压缩上下留白，避免柱条被拉得过散
+  const compact = barCount <= 5
+  const gridTop = compact ? `${Math.max(12, 34 - barCount * 4)}%` : 12
+  const gridBottom = compact ? `${Math.max(16, 38 - barCount * 4)}%` : 48
+  const barCategoryGap = barCount <= 5 ? '18%' : barCount > 12 ? '14%' : '28%'
 
   return {
     backgroundColor: 'transparent',
     grid: {
-      top: 12,
-      bottom: 48,
+      top: gridTop,
+      bottom: gridBottom,
       left: gridLeft,
       right: 320,
       containLabel: false
@@ -129,6 +151,7 @@ export function buildBarRaceOption(chartData, year, { showYear = false, gridLeft
         const item = params[0]
         if (!item) return ''
         const gdp = Array.isArray(item.value) ? item.value[0] : item.value
+        if (!gdp) return item.name
         return `${item.name}<br/>${formatGdp(gdp)}`
       }
     },
@@ -170,7 +193,7 @@ export function buildBarRaceOption(chartData, year, { showYear = false, gridLeft
         clip: false,
         barWidth: FLAG_BAR_HEIGHT,
         barMaxWidth: FLAG_BAR_HEIGHT,
-        barCategoryGap: maxBars > 12 ? '14%' : '28%',
+        barCategoryGap,
         encode: { x: 0, y: 1 },
         itemStyle: {
           color(param) {
@@ -216,9 +239,10 @@ export function buildBarRaceOption(chartData, year, { showYear = false, gridLeft
 }
 
 export function updateBarRaceYear(chart, chartData, year, { showYear = true } = {}) {
-  const source = getYearData(chartData.dataset, year)
-  const maxGdp = getMaxGdp(source)
   const { entityCodes } = resolveEntityChartData(chartData)
+  const allEntities = Object.keys(entityCodes)
+  const source = getYearData(chartData.dataset, year, allEntities)
+  const maxGdp = getMaxGdp(source)
 
   chart.setOption({
     dataset: { source },

@@ -1,4 +1,5 @@
 import http from './http'
+import { refreshChartJson } from './chartApi'
 
 export async function fetchWbStats() {
   const { data } = await http.get('/wb/admin/stats')
@@ -14,6 +15,8 @@ export async function triggerWbImport() {
   const { data } = await http.post('/wb/import')
   return data
 }
+
+export { refreshChartJson }
 
 // countries
 export async function fetchCountries(params) {

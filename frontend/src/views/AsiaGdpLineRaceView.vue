@@ -5,13 +5,19 @@
     :error="error"
     :entities="asiaTop15Entities"
     featured-entity="CHINA"
-  />
+  >
+    <template #actions>
+      <ChartRefreshButton :loading="refreshing" @click="handleRefresh" />
+    </template>
+  </GdpCurveRaceChart>
 </template>
 
 <script setup>
 import { onMounted, ref } from 'vue'
 import GdpCurveRaceChart from '../components/GdpCurveRaceChart.vue'
+import ChartRefreshButton from '../components/ChartRefreshButton.vue'
 import { fetchAsiaGdp } from '../api/chartApi'
+import { useChartJsonRefresh } from '../composables/useChartJsonRefresh'
 import { listEntities } from '../utils/gdpDualCurveData'
 
 const ASIA_TOP15_COUNT = 15
@@ -21,9 +27,11 @@ const asiaTop15Entities = ref([])
 const loading = ref(true)
 const error = ref('')
 
-onMounted(async () => {
+async function loadData({ cacheBust = false } = {}) {
+  loading.value = true
+  error.value = ''
   try {
-    const data = await fetchAsiaGdp()
+    const data = await fetchAsiaGdp({ cacheBust })
     asiaTop15Entities.value = listEntities(data)
       .slice(0, ASIA_TOP15_COUNT)
       .map((item) => item.name)
@@ -38,5 +46,9 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+const { refreshing, handleRefresh } = useChartJsonRefresh('asia-gdp-top15', loadData)
+
+onMounted(() => loadData())
 </script>

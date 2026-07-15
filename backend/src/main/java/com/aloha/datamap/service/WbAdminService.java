@@ -3,6 +3,7 @@ package com.aloha.datamap.service;
 import com.aloha.datamap.dto.PageResponse;
 import com.aloha.datamap.dto.WbAdminStatsDto;
 import com.aloha.datamap.dto.WbCountryDto;
+import com.aloha.datamap.dto.CountryYearGdpDto;
 import com.aloha.datamap.dto.WbCountryRequest;
 import com.aloha.datamap.dto.WbGdpValueDto;
 import com.aloha.datamap.dto.WbGdpValueRequest;
@@ -18,6 +19,7 @@ import com.aloha.datamap.util.SnowflakeIdGenerator;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -57,9 +59,9 @@ public class WbAdminService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<WbCountryDto> listCountries(String keyword, int page, int size) {
+    public PageResponse<WbCountryDto> listCountries(String keyword, String codes, int page, int size) {
         Page<WbCountry> result = countryRepository.findAll(
-                countryKeywordSpec(keyword),
+                countryListSpec(keyword, codes),
                 PageRequest.of(page, size, Sort.by("countryCode").ascending()));
         return toPage(result.map(this::toCountryDto));
     }
@@ -193,23 +195,79 @@ public class WbAdminService {
     }
 
     @Transactional(readOnly = true)
+    public List<WbCountryDto> listCountriesForCatalog() {
+        List<WbCountryDto> countries = new ArrayList<>(countryRepository.findAll(Sort.by("countryName")).stream()
+                .filter(country -> country.getRegion() != null && !country.getRegion().isBlank())
+                .map(this::toCatalogCountryDto)
+                .toList());
+
+        boolean hasSovietUnion = countries.stream().anyMatch(c -> "SUN".equals(c.countryCode()));
+        if (!hasSovietUnion) {
+            countries.add(new WbCountryDto(
+                    "catalog-sun",
+                    "SUN",
+                    "Soviet Union",
+                    "Europe & Central Asia",
+                    "Upper middle income",
+                    "Soviet Union"));
+        }
+
+        countries.sort(Comparator.comparing(WbCountryDto::countryName, String.CASE_INSENSITIVE_ORDER));
+        return countries;
+    }
+
+    @Transactional(readOnly = true)
+    public List<CountryYearGdpDto> listGdpByYear(int year) {
+        WbIndicator indicator = indicatorRepository
+                .findByIndicatorCode("NY.GDP.MKTP.CD")
+                .orElseThrow(() -> notFound("Indicator not found: NY.GDP.MKTP.CD"));
+        return gdpValueRepository.findTopByYear(indicator, year).stream()
+                .map(g -> new CountryYearGdpDto(
+                        g.getCountry().getCountryCode(),
+                        g.getValueUsd()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<WbIndicatorDto> listAllIndicatorsBrief() {
         return indicatorRepository.findAll(Sort.by("indicatorCode")).stream()
                 .map(this::toIndicatorDto)
                 .toList();
     }
 
-    private Specification<WbCountry> countryKeywordSpec(String keyword) {
+    private Specification<WbCountry> countryListSpec(String keyword, String codes) {
         return (root, query, cb) -> {
-            if (keyword == null || keyword.isBlank()) {
+            var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
+
+            if (keyword != null && !keyword.isBlank()) {
+                String pattern = "%" + keyword.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("countryCode")), pattern),
+                        cb.like(cb.lower(root.get("countryName")), pattern),
+                        cb.like(cb.lower(root.get("region")), pattern)));
+            }
+
+            if (codes != null && !codes.isBlank()) {
+                java.util.List<String> codeList = java.util.Arrays.stream(codes.split(","))
+                        .map(String::trim)
+                        .filter(code -> !code.isEmpty())
+                        .map(String::toUpperCase)
+                        .distinct()
+                        .toList();
+                if (!codeList.isEmpty()) {
+                    predicates.add(root.get("countryCode").in(codeList));
+                }
+            }
+
+            if (predicates.isEmpty()) {
                 return cb.conjunction();
             }
-            String pattern = "%" + keyword.trim().toLowerCase() + "%";
-            return cb.or(
-                    cb.like(cb.lower(root.get("countryCode")), pattern),
-                    cb.like(cb.lower(root.get("countryName")), pattern),
-                    cb.like(cb.lower(root.get("region")), pattern));
+            return cb.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
         };
+    }
+
+    private Specification<WbCountry> countryKeywordSpec(String keyword) {
+        return countryListSpec(keyword, null);
     }
 
     private Specification<WbIndicator> indicatorKeywordSpec(String keyword) {
@@ -324,6 +382,23 @@ public class WbAdminService {
                 country.getRegion(),
                 country.getIncomeGroup(),
                 country.getTableName());
+    }
+
+    private WbCountryDto toCatalogCountryDto(WbCountry country) {
+        return new WbCountryDto(
+                country.getId(),
+                country.getCountryCode(),
+                catalogCountryName(country),
+                country.getRegion(),
+                country.getIncomeGroup(),
+                country.getTableName());
+    }
+
+    private String catalogCountryName(WbCountry country) {
+        if ("TWN".equals(country.getCountryCode())) {
+            return "Taiwan, China";
+        }
+        return country.getCountryName();
     }
 
     private WbIndicatorDto toIndicatorDto(WbIndicator indicator) {

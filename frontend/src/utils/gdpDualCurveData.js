@@ -33,6 +33,37 @@ export function indexDatasetByEntity(dataset) {
   return byEntity
 }
 
+/**
+ * 对尚未有数据的年份用 0 补齐到 startYear，
+ * 让后加入的国家从一开始就能显示国旗/折线端点。
+ */
+export function padEntitySeriesFromStart(indexed, entities, startYear) {
+  if (startYear == null || !entities?.length) {
+    return indexed
+  }
+
+  for (const name of entities) {
+    const points = indexed.get(name) ?? []
+    if (!points.length) {
+      indexed.set(name, [{ year: startYear, gdp: 0 }])
+      continue
+    }
+
+    const firstYear = points[0].year
+    if (firstYear <= startYear) {
+      continue
+    }
+
+    const padded = []
+    for (let year = startYear; year < firstYear; year += 1) {
+      padded.push({ year, gdp: 0 })
+    }
+    indexed.set(name, [...padded, ...points])
+  }
+
+  return indexed
+}
+
 export function listEntities(chartData) {
   const indexed = indexDatasetByEntity(chartData?.dataset)
   const { entityColors } = resolveEntityMeta(chartData)

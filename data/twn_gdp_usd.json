@@ -1,6 +1,6 @@
 {
   "entity_code": "TWN",
-  "entity_name": "Taiwan",
+  "entity_name": "Taiwan, China",
   "indicator_code": "NY.GDP.MKTP.CD",
   "source": "Supplemental Taiwan GDP (NY.GDP.MKTP.CD equivalent, current US$). 1960-1979: twn_gdp_supplement_1960_1979.json; 1980-2025: IMF WEO NGDPD via datamapper API.",
   "unit": "USD",

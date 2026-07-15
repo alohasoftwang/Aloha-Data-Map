@@ -30,7 +30,9 @@ export const FLAG_ASPECT_RATIOS = {
   ir: 3 / 2,
   it: 3 / 2,
   jp: 3 / 2,
+  kh: 25 / 16,
   kr: 3 / 2,
+  la: 3 / 2,
   lk: 3 / 2,
   mv: 3 / 2,
   mx: 7 / 4,
@@ -52,7 +54,8 @@ export const FLAG_ASPECT_RATIOS = {
   tr: 3 / 2,
   tw: 3 / 2,
   us: 19 / 10,
-  vn: 3 / 2
+  vn: 3 / 2,
+  tl: 2
 }
 
 export const DEFAULT_FLAG_ASPECT_RATIO = 3 / 2

@@ -1,12 +1,13 @@
 <template>
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h1>Aloha Data Map</h1>
-      <p>Data Visualization</p>
+      <h1>{{ t('app.name') }}</h1>
+      <p>{{ t('app.tagline') }}</p>
+      <LanguageSwitcher placement="sidebar" />
     </div>
     <nav class="menu">
       <div
-        v-for="group in menuGroups"
+        v-for="group in NAV_GROUPS"
         :key="group.id"
         class="menu-group"
       >
@@ -16,7 +17,7 @@
           :class="{ expanded: isGroupExpanded(group.id) }"
           @click="toggleGroup(group.id)"
         >
-          <span>{{ group.label }}</span>
+          <span>{{ t(group.labelKey) }}</span>
           <svg
             class="menu-group-arrow"
             viewBox="0 0 24 24"
@@ -36,7 +37,7 @@
               class="menu-item menu-sub-item"
               active-class="active"
             >
-              {{ child.label }}
+              {{ t(child.labelKey) }}
             </router-link>
             <div v-else class="menu-sub-group">
               <button
@@ -45,7 +46,7 @@
                 :class="{ expanded: isSubGroupExpanded(child.id) }"
                 @click="toggleSubGroup(child.id)"
               >
-                <span>{{ child.label }}</span>
+                <span>{{ t(child.labelKey) }}</span>
                 <svg
                   class="menu-group-arrow"
                   viewBox="0 0 24 24"
@@ -58,15 +59,50 @@
                 </svg>
               </button>
               <div v-show="isSubGroupExpanded(child.id)" class="menu-sub-sub">
-                <router-link
-                  v-for="sub in child.children"
-                  :key="sub.path"
-                  :to="sub.path"
-                  class="menu-item menu-sub-sub-item"
-                  active-class="active"
-                >
-                  {{ sub.label }}
-                </router-link>
+                <template v-for="sub in child.children" :key="sub.path ?? sub.id">
+                  <router-link
+                    v-if="sub.path"
+                    :to="sub.path"
+                    class="menu-item menu-sub-sub-item"
+                    active-class="active"
+                  >
+                    {{ t(sub.labelKey) }}
+                  </router-link>
+                  <div v-else class="menu-nested-group">
+                    <button
+                      type="button"
+                      class="menu-nested-group-title"
+                      :class="{ expanded: isNestedSubGroupExpanded(sub.id) }"
+                      @click="toggleNestedSubGroup(sub.id)"
+                    >
+                      <span>{{ t(sub.labelKey) }}</span>
+                      <svg
+                        class="menu-group-arrow"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                      >
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </button>
+                    <div
+                      v-show="isNestedSubGroupExpanded(sub.id)"
+                      class="menu-nested-sub"
+                    >
+                      <router-link
+                        v-for="leaf in sub.children"
+                        :key="leaf.path"
+                        :to="leaf.path"
+                        class="menu-item menu-nested-sub-item"
+                        active-class="active"
+                      >
+                        {{ t(leaf.labelKey) }}
+                      </router-link>
+                    </div>
+                  </div>
+                </template>
               </div>
             </div>
           </template>
@@ -78,93 +114,66 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import { NAV_GROUPS } from '../config/navigation.js'
+import LanguageSwitcher from './LanguageSwitcher.vue'
 
 const route = useRoute()
+const { t } = useI18n()
 
-const menuGroups = [
-  {
-    id: 'bar-chart-race',
-    label: 'Bar Chart Race',
-    children: [
-      { path: '/world-gdp/top15', label: 'World GDP TOP 15' },
-      { path: '/asia-gdp/top15', label: 'Asia GDP TOP 15' },
-      { path: '/bar-race/china-g7', label: 'China vs G7' },
-      { path: '/bar-race/south-asia', label: 'South Asia GDP' }
-    ]
-  },
-  {
-    id: 'line-race',
-    label: 'Line Race',
-    children: [
-      { path: '/line-race/world-top15', label: 'World GDP TOP 15' },
-      { path: '/world-gdp/dual', label: 'GDP Dual Curve Race' },
-      { path: '/line-race/asia-top15', label: 'Asia GDP TOP 15' },
-      { path: '/world-gdp/line-race/cjk', label: 'China vs Japan vs Korea vs India' },
-      { path: '/world-gdp/line-race/china-g7', label: 'China vs G7' },
-      { path: '/world-gdp/line-race/india-g7-kr', label: 'India vs G7 ex-US + Korea' },
-      { path: '/line-race/south-asia', label: 'South Asia GDP' }
-    ]
-  },
-  {
-    id: 'charts',
-    label: 'Charts',
-    children: [
-      { path: '/world-gdp/treemap-top10', label: 'World GDP TOP 10 Treemap' }
-    ]
-  },
-  {
-    id: 'reference',
-    label: 'Reference',
-    children: [
-      { path: '/flags/by-region', label: 'Flags by Region' }
-    ]
-  },
-  {
-    id: 'data-admin',
-    label: 'Data Admin',
-    children: [
-      { path: '/admin/data', label: 'WB Tables' }
-    ]
-  }
-]
-
-const expandedGroups = ref({
-  'bar-chart-race': true,
-  'line-race': true,
-  'charts': true,
-  'reference': true,
-  'data-admin': true
-})
-
-const expandedSubGroups = ref({})
+/** 一级菜单：同时只展开一个 */
+const expandedGroupId = ref(null)
+/** 二级菜单：同时只展开一个 */
+const expandedSubGroupId = ref(null)
+/** 三级菜单：同时只展开一个 */
+const expandedNestedSubGroupId = ref(null)
 
 function isGroupExpanded(groupId) {
-  return expandedGroups.value[groupId]
+  return expandedGroupId.value === groupId
 }
 
 function isSubGroupExpanded(subGroupId) {
-  return expandedSubGroups.value[subGroupId]
+  return expandedSubGroupId.value === subGroupId
+}
+
+function isNestedSubGroupExpanded(nestedId) {
+  return expandedNestedSubGroupId.value === nestedId
 }
 
 function toggleGroup(groupId) {
-  expandedGroups.value[groupId] = !expandedGroups.value[groupId]
+  if (expandedGroupId.value === groupId) {
+    expandedGroupId.value = null
+    return
+  }
+  expandedGroupId.value = groupId
+  expandedSubGroupId.value = null
+  expandedNestedSubGroupId.value = null
 }
 
 function toggleSubGroup(subGroupId) {
-  expandedSubGroups.value[subGroupId] = !expandedSubGroups.value[subGroupId]
+  if (expandedSubGroupId.value === subGroupId) {
+    expandedSubGroupId.value = null
+    expandedNestedSubGroupId.value = null
+    return
+  }
+  expandedSubGroupId.value = subGroupId
+  expandedNestedSubGroupId.value = null
+}
+
+function toggleNestedSubGroup(nestedId) {
+  expandedNestedSubGroupId.value =
+    expandedNestedSubGroupId.value === nestedId ? null : nestedId
 }
 
 function syncExpandedFromRoute() {
   const groupId = route.meta.menuGroup
   if (groupId) {
-    expandedGroups.value[groupId] = true
+    expandedGroupId.value = groupId
   }
 
-  const subGroupId = route.meta.menuSubGroup
-  if (subGroupId) {
-    expandedSubGroups.value[subGroupId] = true
-  }
+  expandedSubGroupId.value = route.meta.menuSubGroup || null
+  expandedNestedSubGroupId.value = route.meta.menuNestedSubGroup || null
 }
 
 watch(() => route.path, syncExpandedFromRoute, { immediate: true })

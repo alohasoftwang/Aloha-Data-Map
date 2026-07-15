@@ -19,6 +19,13 @@ export const ASIA_SUBREGIONS = {
 
 export const EXCLUDED_ASIA_COUNTRY_CODES = new Set(['HKG', 'MAC', 'TWN'])
 
+export const SOUTHEAST_ASIA_COUNTRY_CODES = ASIA_SUBREGIONS['Southeast Asia']
+
+export const SOUTH_ASIA_COUNTRY_CODES = ASIA_SUBREGIONS['South Asia']
+
+/** 中东（与西亚列表一致） */
+export const MIDDLE_EAST_COUNTRY_CODES = ASIA_SUBREGIONS['West Asia']
+
 export const ASIA_COUNTRY_CODES = new Set(
   Object.values(ASIA_SUBREGIONS)
     .flat()

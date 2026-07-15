@@ -71,7 +71,7 @@ def build_payload(imf_values: dict[int, float], supplement: dict[int, float], en
 
     return {
         "entity_code": "TWN",
-        "entity_name": "Taiwan",
+        "entity_name": "Taiwan, China",
         "indicator_code": INDICATOR_CODE,
         "source": source,
         "unit": "USD",

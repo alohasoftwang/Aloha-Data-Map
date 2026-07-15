@@ -26,21 +26,33 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <th v-for="col in columns" :key="col.key" :style="col.width ? { width: col.width } : undefined">
-              {{ col.label }}
+            <th
+              v-for="col in visibleColumns"
+              :key="col.key"
+              :style="col.width ? { width: col.width } : undefined"
+            >
+              {{ columnLabel(col) }}
             </th>
-            <th v-if="editable || deletable" class="actions-col">Actions</th>
+            <th v-if="editable || deletable" class="actions-col">{{ t('admin.table.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!rows.length">
-            <td :colspan="columns.length + (editable || deletable ? 1 : 0)" class="empty-cell">
+            <td :colspan="visibleColumns.length + (editable || deletable ? 1 : 0)" class="empty-cell">
               No data
             </td>
           </tr>
           <tr v-for="row in rows" :key="row[rowKey]">
-            <td v-for="col in columns" :key="col.key">
-              <span v-if="col.mono" class="mono" :title="formatCell(row, col)">
+            <td v-for="col in visibleColumns" :key="col.key">
+              <button
+                v-if="col.clickable && formatCell(row, col) !== '—'"
+                type="button"
+                class="link-btn cell-action"
+                @click="emit('cell-click', { column: col, row, value: row[col.key] })"
+              >
+                {{ formatCell(row, col) }}
+              </button>
+              <span v-else-if="col.mono" class="mono" :title="formatCell(row, col)">
                 {{ formatCell(row, col) }}
               </span>
               <span v-else>{{ formatCell(row, col) }}</span>
@@ -84,7 +96,8 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   columns: { type: Array, required: true },
@@ -102,7 +115,11 @@ const props = defineProps({
   createLabel: { type: String, default: 'Add' }
 })
 
-const emit = defineEmits(['search', 'page-change', 'create', 'edit', 'delete'])
+const emit = defineEmits(['search', 'page-change', 'create', 'edit', 'delete', 'cell-click'])
+
+const { t } = useI18n()
+
+const visibleColumns = computed(() => props.columns.filter((col) => !col.hidden))
 
 const keywordModel = ref(props.keyword)
 const sizeModel = ref(props.page?.size || 20)
@@ -120,6 +137,11 @@ watch(
     if (value) sizeModel.value = value
   }
 )
+
+function columnLabel(col) {
+  if (col.labelKey) return t(col.labelKey)
+  return col.label ?? ''
+}
 
 function formatCell(row, col) {
   const value = row[col.key]
