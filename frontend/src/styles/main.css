@@ -52,6 +52,45 @@ body {
   height: 100vh;
 }
 
+/* 内容区内的竖屏录制画布：固定 1080×1920，居中缩放 */
+.mobile-record-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0c121c;
+}
+
+.mobile-record-stage:fullscreen,
+.mobile-record-stage--fullscreen {
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.mobile-record-toolbar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+.mobile-record-frame {
+  flex-shrink: 0;
+  transform-origin: center center;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(154, 175, 201, 0.2), 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+.mobile-record-stage:fullscreen .mobile-record-frame,
+.mobile-record-stage--fullscreen .mobile-record-frame {
+  box-shadow: none;
+}
+
 .sidebar {
   width: 240px;
   background: var(--bg-sidebar);
@@ -319,6 +358,48 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.chart-panel--mobile {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  /* YouTube 竖屏：两侧略留安全边距 */
+  padding-left: 38px;
+  padding-right: 28px;
+  background: var(--bg-page-gradient);
+}
+
+.chart-panel--mobile .chart-header--mobile-title {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 130px 16px 16px;
+}
+
+.chart-panel--mobile .chart-header--mobile-title .chart-header-text {
+  text-align: center;
+}
+
+.chart-panel--mobile .chart-header--mobile-title .chart-title {
+  margin: 0;
+  font-size: 52px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.chart-panel--mobile .chart-header--mobile-title .chart-unit {
+  margin: 8px 0 0;
+  font-size: 16px;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.chart-panel--mobile .bar-race-container {
+  min-height: 0;
 }
 
 .chart-panel:fullscreen {

@@ -66,6 +66,8 @@ export const FLAG_IMAGE_HEIGHT = 107
 /** 各场景显示高度（宽度由 getFlagDisplaySize 推算） */
 export const FLAG_DISPLAY_HEIGHT_REFERENCE = 44
 export const FLAG_DISPLAY_HEIGHT_BAR = 36
+/** 手机竖屏录制画布（1080×1920）柱状竞赛国旗高度 */
+export const FLAG_DISPLAY_HEIGHT_BAR_MOBILE = 58
 export const FLAG_DISPLAY_HEIGHT_LINE = 28
 export const FLAG_DISPLAY_HEIGHT_LINE_FEATURED = 32
 export const FLAG_DISPLAY_HEIGHT_TREEMAP = 20

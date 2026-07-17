@@ -27,6 +27,7 @@ import MiddleEastLineRaceView from '../views/MiddleEastLineRaceView.vue'
 import WorldGdpLineRaceView from '../views/WorldGdpLineRaceView.vue'
 import WorldGdpTop10View from '../views/WorldGdpTop10View.vue'
 import WorldGdpTreemapView from '../views/WorldGdpTreemapView.vue'
+import WorldGdpMobileView from '../views/mobile/WorldGdpMobileView.vue'
 import WbDataAdminView from '../views/admin/WbDataAdminView.vue'
 
 const routes = [
@@ -144,6 +145,16 @@ const routes = [
     component: WorldGdpTop10View,
     meta: {
       titleKey: 'routes.worldGdpTop15',
+      menuGroup: 'gdp',
+      menuSubGroup: 'world-gdp-top15'
+    }
+  },
+  {
+    path: '/m/world-gdp/top15',
+    name: 'mobile-world-gdp-top15',
+    component: WorldGdpMobileView,
+    meta: {
+      titleKey: 'routes.worldGdpTop15Mobile',
       menuGroup: 'gdp',
       menuSubGroup: 'world-gdp-top15'
     }

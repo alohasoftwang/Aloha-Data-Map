@@ -16,7 +16,8 @@ export const NAV_GROUPS = [
         labelKey: 'menu.items.worldGdpTop15',
         children: [
           { path: '/world-gdp/top15', labelKey: 'menu.items.worldGdpTop15Bar' },
-          { path: '/line-race/world-top15', labelKey: 'menu.items.worldGdpTop15Line' }
+          { path: '/line-race/world-top15', labelKey: 'menu.items.worldGdpTop15Line' },
+          { path: '/m/world-gdp/top15', labelKey: 'menu.items.worldGdpTop15Mobile' }
         ]
       },
       {
